@@ -225,6 +225,12 @@ export function PostgisMixin(opts?: { srid: number }) {
         )}`;
     }
 
+    const result = GeoJSON.validate(value);
+
+    if (!result.valid) {
+      return result.error;
+    }
+
     return true;
   }
 
