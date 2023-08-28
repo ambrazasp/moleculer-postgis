@@ -147,7 +147,7 @@ export function PostgisMixin(opts?: { srid: number }) {
   }
 
   async function parseGeom(ctx: Context, geom: GeoJSON.FeatureCollection) {
-    if (!geom) return { geom: null };
+    if (!geom) return;
 
     const result = GeoJSON.validate(geom);
     if (!result.valid) return;
@@ -167,8 +167,8 @@ export function PostgisMixin(opts?: { srid: number }) {
   async function setGeomFn({ ctx, value }: any) {
     const result = await this.parseGeom(ctx, value);
 
-    if (!result.geom) return;
-    return result?.geom;
+    if (!result?.geom) return;
+    return result.geom;
   }
 
   function populateFn(field: GenericObject<any>, key: string) {
