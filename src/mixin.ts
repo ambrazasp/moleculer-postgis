@@ -167,7 +167,7 @@ export function PostgisMixin(opts?: { srid: number }) {
   async function setGeomFn({ ctx, value }: any) {
     const result = await this.parseGeom(ctx, value);
 
-    if (!result?.geom) return;
+    if (!result?.geom) return value;
     return result.geom;
   }
 
@@ -205,9 +205,10 @@ export function PostgisMixin(opts?: { srid: number }) {
     };
   }
 
-  function validateFn({ entity, root, field }: any) {
+  function _geomValidateFn({ entity, root, field }: any) {
     // since value is changed (in set method) use root instead
     const value = root[field.name];
+    console.log(value);
     if (entity?.geom && !value) return true;
 
     if (!field?.geom?.multi) {
@@ -241,7 +242,7 @@ export function PostgisMixin(opts?: { srid: number }) {
       field.populate = populateFn.call(this, field, key);
       field.set = setGeomFn;
       field.geomFilterFn = geomFilterFn;
-      field.validate = validateFn;
+      field.validate = '_geomValidateFn';
     } else if (type === 'area') {
       field.populate = populateAreaFn.call(this, field, key);
     } else {
@@ -260,6 +261,7 @@ export function PostgisMixin(opts?: { srid: number }) {
     methods: {
       _getPropertiesFromFeatureCollection,
       _applyGeomFilterFunction,
+      _geomValidateFn,
       parseGeom,
     },
     actions: {
