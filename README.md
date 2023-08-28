@@ -28,7 +28,7 @@ yarn add moleculer-postgis
 ## Usage
 
 ```js
-import { PostgisMixin } from 'moleculer-postgis';
+import PostgisMixin from 'moleculer-postgis';
 
 module.exports = {
   mixins: [
@@ -43,7 +43,6 @@ module.exports = {
       geom: {
         type: 'any',
         geom: {
-          type: 'geom',
           types: ['Point', 'LineString']
         }
       },
