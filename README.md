@@ -28,13 +28,13 @@ yarn add moleculer-postgis
 ## Usage
 
 ```js
-import PostgisMixin from 'moleculer-postgis';
+import PostgisMixin, { GeometryType } from 'moleculer-postgis';
 
 module.exports = {
   mixins: [
-    PostgisMixin: {
-      srid: 3346
-    }
+    PostgisMixin({
+      srid: 3346,
+    }),
   ],
 
   settings: {
@@ -43,19 +43,182 @@ module.exports = {
       geom: {
         type: 'any',
         geom: {
-          types: ['Point', 'LineString']
-        }
+          types: [GeometryType.POINT, GeometryType.LINE_STRING],
+        },
       },
       area: {
         type: 'number',
         virtual: true,
         geom: {
           type: 'area',
-        }
-      }
-    }
-  }
+        },
+      },
+    },
+  },
 };
+```
+
+# Documentation
+
+## Mixin
+
+Using mixin is simple. Import and define it as a function. To the function you can pass `opts` such as global `srid`.
+
+```js
+import PostgisMixin from 'moleculer-postgis';
+module.exports = {
+  mixins: [
+    PostgisMixin({
+      srid: 3346,
+    }),
+  ],
+};
+```
+
+## Fields
+
+```js
+module.exports = {
+  settings: {
+    fields: {
+      geom: {
+        columnName: 'geomfield', // optional
+        geom: {
+          type: 'geom', // define type - defaults to "geom"
+          types: [], // defining types,
+          multi: true, // defines handling multi geometries
+        },
+      },
+    },
+    defaultPopulates: ['geom'],
+  },
+};
+
+module.exports = {
+  settings: {
+    fields: {
+      geom: {
+        geom: true,
+      },
+    },
+  },
+};
+```
+
+**Options:**
+
+| Option  | Default value | Type (available values)     |
+| ------- | ------------- | --------------------------- |
+| `type`  | `geom`        | String - `area`, `geom`     |
+| `multi` | `false`       | Boolean                     |
+| `types` | All types     | `Array<string>` or `string` |
+
+Types - `Point`, `LineString`, `Polygon`, `MultiLineString`, `MultiPoint`, `MultiPolygon`
+
+## Queries
+
+| Query                   |                                     |
+| ----------------------- | ----------------------------------- |
+| `areaQuery`             | [More info](#areaquery)             |
+| `distanceQuery`         | [More info](#distancequery)         |
+| `asGeoJsonQuery`        | [More info](#asgeojsonquery)        |
+| `geometriesAsTextQuery` | [More info](#geometriesastextquery) |
+| `geomFromText`          | [More info](#geomfromtext)          |
+| `intersectsQuery`       | [More info](#intersectsquery)       |
+
+### areaQuery
+
+```js
+import { areaQuery } from 'moleculer-postgis';
+const field = 'geomfield';
+const fieldAs = 'geom';
+// optional
+const srid = 3346;
+
+// ROUND(ST_Area("geomfield")) as "geom"
+// If srid is passed, ST_Transform is applied
+areaQuery(geom, fieldAs, srid);
+```
+
+### distanceQuery
+
+```js
+import { distanceQuery } from 'moleculer-postgis';
+const field1 = 'geomfield';
+const field2 = 'geomfield2';
+const resultAs = 'distance';
+// optional
+const srid = 3346;
+
+// ROUND(ST_Distance("geomfield", "geomfield2")) as "distance"
+// If srid is passed, ST_Transform is applied for each field
+distanceQuery(field1, field2, resultAs, srid);
+```
+
+### asGeoJsonQuery
+
+```js
+import { asGeoJsonQuery } from 'moleculer-postgis';
+const field = 'geomfield';
+const resultAs = 'geom';
+// optional
+const srid = 3346;
+const opts = {
+  digits: 0,
+  options: 0,
+};
+
+// ST_AsGeoJSON("geomfield")::json as "geom"
+// If srid is passed, ST_Transform is applied for each field. Options are not applied if not passed
+asGeoJsonQuery(field, resultAs, srid, opts);
+```
+
+### geometriesAsTextQuery
+
+```js
+import { geometriesAsTextQuery } from 'moleculer-postgis';
+const geometry = {
+  type: 'Point',
+  coordinates: [11, 22],
+};
+
+// ST_AsText(...)
+// If passed multi geometries - it will use ST_Collect
+geometriesAsTextQuery(geometry);
+```
+
+### geomFromText
+
+```js
+import { geomFromText, geometriesAsTextQuery } from 'moleculer-postgis';
+const geometry = {
+  type: 'Point',
+  coordinates: [11, 22],
+};
+const srid = 3346;
+// ST_AsText(...)
+const text = geometriesAsTextQuery(geometry);
+
+// ST_GeomFromText(...)
+// If srid is passed - ST_Transform is applied
+geomFromText(text, srid);
+```
+
+### intersectsQuery
+
+```js
+import { intersectsQuery } from 'moleculer-postgis';
+// any type of geometry can be passed (feature collection, feature, array of feature collections, etc)
+const geometry = {
+  type: 'Point',
+  coordinates: [11, 22],
+};
+const field = 'geomfield';
+const srid = 3346;
+
+// ST_intersects(...)
+// If srid is passed - ST_Transform is applied
+intersectsQuery(field, geometry, srid);
 ```
 
 ## Contributing
