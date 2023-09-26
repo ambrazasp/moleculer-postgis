@@ -87,6 +87,10 @@ module.exports = {
           type: 'geom', // define type - defaults to "geom"
           types: [], // defining types,
           multi: true, // defines handling multi geometries
+          validate({ ctx, params, value, field }) {
+            // validation function (same as @moleculer/database)
+            return true;
+          },
         },
       },
     },
@@ -107,11 +111,12 @@ module.exports = {
 
 **Options:**
 
-| Option  | Default value | Type (available values)     |
-| ------- | ------------- | --------------------------- |
-| `type`  | `geom`        | String - `area`, `geom`     |
-| `multi` | `false`       | Boolean                     |
-| `types` | All types     | `Array<string>` or `string` |
+| Option     | Default value | Type (available values)     |
+| ---------- | ------------- | --------------------------- |
+| `type`     | `geom`        | String - `area`, `geom`     |
+| `multi`    | `false`       | Boolean                     |
+| `types`    | All types     | `Array<string>` or `string` |
+| `validate` | -             | `Function` or `string`      |
 
 Types - `Point`, `LineString`, `Polygon`, `MultiLineString`, `MultiPoint`, `MultiPolygon`
 

@@ -1,4 +1,4 @@
-import { Context } from 'moleculer';
+import { Context, Errors } from 'moleculer';
 import * as GeoJSON from 'geojsonjs';
 import { GenericObject, parseToJsonIfNeeded } from './utils';
 import {
@@ -37,14 +37,58 @@ export function PostgisMixin(opts?: { srid: number }) {
     }
 
     for (const key of Object.keys(ctx.params.query)) {
-      if (this.settings?.fields?.[key]?._geomFilterFn) {
+      if (this.settings?.fields?.[key]?.geomFilterFn) {
         const field = this.settings.fields[key];
-        if (typeof field._geomFilterFn === 'function') {
-          ctx.params.query[key] = await field._geomFilterFn({
+        if (typeof field.geomFilterFn === 'function') {
+          ctx.params.query[key] = await field.geomFilterFn({
             value: ctx.params.query[key],
             field: field,
             query: ctx.params.query,
           });
+        }
+      }
+    }
+
+    return ctx;
+  }
+
+  async function _validateGeomFields(ctx: Context<{ [key: string]: any }>) {
+    const throwErrorFn = (field: string, value: any, message?: string) => {
+      throw new Errors.ValidationError(
+        message || 'Parameters validation error!',
+        'VALIDATION_ERROR',
+        {
+          field,
+          value,
+        }
+      );
+    };
+
+    if (this.settings?.fields) {
+      for (const key of Object.keys(this.settings.fields)) {
+        const field = this.settings.fields[key];
+
+        if (field?.geom?.validate) {
+          const fieldName = field?.name || key;
+          const value = ctx.params[key];
+
+          const args = {
+            value,
+            field,
+            ctx,
+            params: ctx.params,
+          };
+
+          let res: any = true;
+          if (typeof field.geom.validate === 'function') {
+            res = await field.geom.validate.apply(this, args);
+          } else if (typeof field.geom.validate === 'string') {
+            res = await this[field.geom.validate](args);
+          }
+
+          if (res !== true) {
+            throwErrorFn(fieldName, value, res);
+          }
         }
       }
     }
@@ -208,7 +252,6 @@ export function PostgisMixin(opts?: { srid: number }) {
   function _geomValidateFn({ entity, root, field }: any) {
     // since value is changed (in set method) use root instead
     const value = root[field.name];
-    console.log(value);
     if (entity?.geom && !value) return true;
 
     if (!field?.geom?.multi) {
@@ -255,12 +298,16 @@ export function PostgisMixin(opts?: { srid: number }) {
       before: {
         list: '_applyGeomFilterFunction',
         find: '_applyGeomFilterFunction',
+        create: '_validateGeomFields',
+        update: '_validateGeomFields',
+        replace: '_validateGeomFields',
       },
     },
 
     methods: {
       _getPropertiesFromFeatureCollection,
       _applyGeomFilterFunction,
+      _validateGeomFields,
       _geomValidateFn,
       parseGeom,
     },
