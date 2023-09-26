@@ -81,7 +81,7 @@ export function PostgisMixin(opts?: { srid: number }) {
 
           let res: any = true;
           if (typeof field.geom.validate === 'function') {
-            res = await field.geom.validate.apply(this, args);
+            res = await field.geom.validate.call(this, args);
           } else if (typeof field.geom.validate === 'string') {
             res = await this[field.geom.validate](args);
           }
