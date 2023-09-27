@@ -148,6 +148,8 @@ export function PostgisMixin(opts?: { srid: number }) {
         );
       }
 
+      if (!item.geom) return acc;
+
       acc[`${item.id}`] = GeoJSON.parse({
         ...item.geom,
         properties: itemProperties,
