@@ -201,7 +201,7 @@ export function PostgisMixin(opts?: { srid: number }) {
 
     const data = await adapter.client
       .select(
-        adapter.client.raw(`${geometriesAsTextQuery(geometries)} as geom`)
+        adapter.client.raw(`${geometriesAsTextQuery(geometries)} as geom`, opts.srid)
       )
       .first();
 

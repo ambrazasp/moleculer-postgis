@@ -190,6 +190,15 @@ const geometry = {
 // ST_AsText(...)
 // If passed multi geometries - it will use ST_Collect
 geometriesAsTextQuery(geometry);
+
+// Using crs with transofrms
+const geometry = {
+  type: 'Point',
+  coordinates: [11, 22],
+  crs: { type: 'name', properties: { name: 'EPSG:4326' } },
+};
+const srid = 3346;
+geometriesAsTextQuery(geometry, srid);
 ```
 
 ### geomFromText

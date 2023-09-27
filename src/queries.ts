@@ -1,5 +1,12 @@
-import { AllTypes, Geometry, getGeometries } from 'geojsonjs';
+import { AllTypes, Geometry as GeometryObject, getGeometries } from 'geojsonjs';
 import { isNumber } from 'lodash';
+
+type Geometry = GeometryObject & {
+  crs?: {
+    type?: string;
+    properties: { [key: string]: any };
+  };
+};
 
 const defaultField = '"geom"';
 function transform(field: string, srid?: number) {
@@ -41,20 +48,35 @@ export function asGeoJsonQuery(
   return `ST_AsGeoJSON(${query})::json as ${as || field}`;
 }
 
-export function geometriesAsTextQuery(geometry: Geometry | Geometry[]) {
+export function geometriesAsTextQuery(
+  geometry: Geometry | Geometry[],
+  srid?: number
+) {
   if (Array.isArray(geometry) && geometry.length === 1) {
     geometry = geometry[0];
   }
 
-  if (!Array.isArray(geometry)) {
-    return `ST_AsText(ST_GeomFromGeoJSON('${JSON.stringify(geometry)}'))`;
+  let result = `'${JSON.stringify(geometry)}'`;
+  const multi = Array.isArray(geometry);
+  if (multi) {
+    result = `JSON_ARRAY_ELEMENTS(${result})`;
   }
 
-  return `ST_AsText(ST_Collect(ARRAY(
-    SELECT ST_GeomFromGeoJSON(JSON_ARRAY_ELEMENTS('${JSON.stringify(
-      geometry
-    )}'))
-  )))`;
+  const applyTransform = !multi
+    ? !!(geometry as Geometry).crs
+    : (geometry as Geometry[]).every((g) => !!g.crs);
+
+  result = `ST_GeomFromGeoJSON(${result})`;
+
+  if (applyTransform && srid) {
+    result = transform(result, srid);
+  }
+
+  if (multi) {
+    result = `ST_Collect(ARRAY(SELECT ${result}))`;
+  }
+
+  return `ST_AsText(${result})`;
 }
 
 export function geomFromText(text: string, srid?: number) {
