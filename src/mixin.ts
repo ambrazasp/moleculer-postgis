@@ -239,6 +239,8 @@ export function PostgisMixin(opts?: { srid: number }) {
   }
 
   async function setGeomFn({ ctx, value }: any) {
+    if (!value) return value;
+
     const result = await this.parseGeom(ctx, value);
 
     if (!result?.geom) return value;
