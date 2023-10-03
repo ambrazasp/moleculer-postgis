@@ -1,6 +1,6 @@
 {
   "name": "moleculer-postgis",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "Postgis mixin and functions for @moleculer/database",
   "main": "./src/index.js",
   "typings": "./src/index.d.ts",

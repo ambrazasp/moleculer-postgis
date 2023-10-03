@@ -9,6 +9,32 @@ import {
 } from './queries';
 import { merge } from 'lodash';
 
+export function PopulateHandlerFn(action: string) {
+  return async function (ctx: Context, values: any[], docs: any[], field: any) {
+    if (!values.length) return null;
+    const rule = field.populate;
+    const params = {
+      ...(rule.params || {}),
+      id: values,
+      mapping: true,
+      throwIfNotExist: false,
+    };
+
+    const byKey: any = await ctx.call(action, params, rule.callOptions);
+
+    let fieldName = field.name;
+    if (rule.keyField) {
+      fieldName = rule.keyField;
+    }
+
+    return docs?.map((d) => {
+      const fieldValue = d[fieldName];
+      if (!fieldValue) return null;
+      return byKey[fieldValue] || null;
+    });
+  };
+}
+
 export function PostgisMixin(opts?: { srid: number }) {
   opts = merge(opts || {}, { srid: 3346 });
   function _getPropertiesFromFeatureCollection(
@@ -222,7 +248,7 @@ export function PostgisMixin(opts?: { srid: number }) {
   function populateFn(field: GenericObject<any>, key: string) {
     return {
       keyField: 'id',
-      action: `${this.name}._getFeatureCollectionFromGeom`,
+      handler: PopulateHandlerFn(`${this.name}._getFeatureCollectionFromGeom`),
       params: {
         properties: field.geom?.properties,
         field: field.columnName || key,
@@ -233,7 +259,7 @@ export function PostgisMixin(opts?: { srid: number }) {
   function populateAreaFn(field: GenericObject<any>, key: string) {
     return {
       keyField: 'id',
-      action: `${this.name}._getGeometryArea`,
+      handler: PopulateHandlerFn(`${this.name}._getGeometryArea`),
       params: {
         field: field.geom.field || key,
         asField: key,
