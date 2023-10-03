@@ -284,7 +284,7 @@ export function PostgisMixin(opts?: { srid: number }) {
   function _geomValidateFn({ entity, root, field }: any) {
     // since value is changed (in set method) use root instead
     const value = root[field.name];
-    if (entity?.geom && !value) return true;
+    if (!value) return true;
 
     if (!field?.geom?.multi) {
       const features: GeoJSON.Feature[] = GeoJSON.getFeatures(value);
