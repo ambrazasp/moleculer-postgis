@@ -69,7 +69,11 @@ import PostgisMixin from 'moleculer-postgis';
 module.exports = {
   mixins: [
     PostgisMixin({
-      srid: 3346,
+      srid: 3346, // default 3346
+      geojson: { // optional - Documentation: https://postgis.net/docs/ST_AsGeoJSON.html
+        maxDecimalDigits: 0 // default
+        options: 0 // default
+      }
     }),
   ],
 };

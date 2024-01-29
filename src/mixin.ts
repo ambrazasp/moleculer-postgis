@@ -35,8 +35,15 @@ export function PopulateHandlerFn(action: string) {
   };
 }
 
-export function PostgisMixin(opts?: { srid: number }) {
-  opts = merge(opts || {}, { srid: 3346 });
+export function PostgisMixin(opts?: {
+  srid: number;
+  geojson: { maxDecimalDigits: number; options: number };
+}) {
+  opts = merge(opts || {}, {
+    srid: 3346,
+    geojson: { maxDecimalDigits: 0, options: 0 },
+  });
+
   function _getPropertiesFromFeatureCollection(
     geom: GeoJSON.FeatureCollection,
     property?: string
@@ -139,8 +146,8 @@ export function PostgisMixin(opts?: { srid: number }) {
       'id',
       table.client.raw(
         asGeoJsonQuery(field, 'geom', opts.srid, {
-          digits: 0,
-          options: 0,
+          digits: opts?.geojson?.maxDecimalDigits || 0,
+          options: opts?.geojson?.options || 0,
         })
       )
     );
