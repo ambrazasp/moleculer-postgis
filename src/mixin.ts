@@ -37,7 +37,7 @@ export function PopulateHandlerFn(action: string) {
 
 export function PostgisMixin(opts?: {
   srid?: number;
-  geojson?: { maxDecimalDigits: number; options: number };
+  geojson?: { maxDecimalDigits?: number; options?: number };
 }) {
   opts = merge(opts || {}, {
     srid: 3346,
