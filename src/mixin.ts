@@ -39,10 +39,14 @@ export function PostgisMixin(opts?: {
   srid?: number;
   geojson?: { maxDecimalDigits?: number; options?: number };
 }) {
-  opts = merge(opts || {}, {
-    srid: 3346,
-    geojson: { maxDecimalDigits: 0, options: 0 },
-  });
+  opts = merge(
+    {},
+    {
+      srid: 3346,
+      geojson: { maxDecimalDigits: 0, options: 0 },
+    },
+    opts || {}
+  );
 
   function _getPropertiesFromFeatureCollection(
     geom: GeoJSON.FeatureCollection,
